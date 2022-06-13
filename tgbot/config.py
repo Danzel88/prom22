@@ -1,13 +1,15 @@
 from dataclasses import dataclass
 
+import typing
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from environs import Env
 
 
 @dataclass
 class DbConfig:
     host: str
-    password: str
-    user: str
+    # password: str
+    # user: str
     database: str
 
 
@@ -48,8 +50,8 @@ def load_config(path: str = None):
         ),
         db=DbConfig(
             host=env.str('DB_HOST'),
-            password=env.str('DB_PASS'),
-            user=env.str('DB_USER'),
+            # password=env.str('DB_PASS'),
+            # user=env.str('DB_USER'),
             database=env.str('DB_NAME')
         ),
         misc=Miscellaneous(),
@@ -57,3 +59,51 @@ def load_config(path: str = None):
             cmd=list(map(str, env.list("COMMANDS")))
         )
     )
+
+
+@dataclass
+class ListOfButtons:
+    text: typing.List
+    callback: typing.List = None
+    align: typing.List[int] = None
+
+    @property
+    def inline_keyboard(self):
+        return generate_inline_keyboard(self)
+
+    @property
+    def reply_keyboard(self):
+        return generate_reply_keyboard(self)
+
+
+def generate_inline_keyboard(args: ListOfButtons) -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup()
+    if args.text and args.callback and not (len(args.text) == len(args.callback)):
+        raise IndexError("Все списки должны быть одной длины!")
+
+    if not args.align:
+        for num, button in enumerate(args.text):
+            keyboard.add(InlineKeyboardButton(text=str(button),
+                                              callback_data=str(args.callback[num])))
+    else:
+        count = 0
+        for row_size in args.align:
+            keyboard.row(*[InlineKeyboardButton(text=str(text), callback_data=str(callback_data))
+                           for text, callback_data in
+                           tuple(zip(args.text, args.callback))[count:count + row_size]])
+            count += row_size
+    return keyboard
+
+
+def generate_reply_keyboard(args: ListOfButtons) -> ReplyKeyboardMarkup:
+    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+
+    if not args.align:
+        for num, button in enumerate(args.text):
+            keyboard.add(KeyboardButton(text=str(button)))
+    else:
+        count = 0
+        for row_size in args.align:
+            keyboard.row(*[KeyboardButton(text=str(text)) for text in args.text[count:count + row_size]])
+            count += row_size
+    return keyboard

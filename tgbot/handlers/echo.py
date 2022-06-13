@@ -25,6 +25,7 @@ async def bot_echo_all(message: types.Message, state: FSMContext):
     print('echo handler')
     print(type(state_name))
     print(state_name)
+    print(message.text)
     if state_name == "Review:wait_review":
         text = 'ты хотел оставить отзыв. но видимо передумал. ' \
                'Если снова решишь написать отзыв, выбери соответсвующую команды '

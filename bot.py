@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+import aiogram
 from aiogram import Bot, Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.contrib.fsm_storage.redis import RedisStorage2
@@ -50,7 +51,7 @@ async def main():
                             6379,
                             db=4,
                             pool_size=10,
-                            prefix='faneron_user') if config.tg_bot.use_redis else MemoryStorage()
+                            prefix='Graduates22') if config.tg_bot.use_redis else MemoryStorage()
     bot = Bot(token=config.tg_bot.token, parse_mode='HTML')
     dp = Dispatcher(bot, storage=storage)
 

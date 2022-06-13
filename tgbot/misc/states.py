@@ -7,12 +7,16 @@ class Graduate(StatesGroup):
 
 
 class Review(StatesGroup):
+    wait_role = State()
+    wait_personal_info = State()
     wait_review = State()
-    review_done = State()
 
 
 class Chat(StatesGroup):
-    wait_review = State()
+    wait_name = State()
+    wait_grade = State()
+    wait_school = State()
+    wait_text = State()
 
 
 async def state_setter(state: FSMContext, message):

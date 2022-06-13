@@ -12,14 +12,19 @@ class Database:
         id INTEGER PRIMARY KEY,
         tg_id INTEGER TYPE UNIQUE,
         username VARCHAR(100),
+        role VARCHAR(10),
+        personal_info VARCHAR(255),
         review TEXT);
-        '''
+    '''
     CREATE_CHAT_MESSAGES = '''CREATE TABLE chat_msg(
         id INTEGER PRIMARY KEY,
         tg_id INTEGER TYPE UNIQUE,
         username VARCHAR(100),
-        message TEXT);
-        '''
+        name VARCHAR(100),
+        grade VARCHAR(5),
+        school VARCHAR(100),
+        message VARCHAR(201));
+    '''
     CREATE_STICKERPACK_TABLE = '''CREATE TABLE stickerpack(
         id INTEGER PRIMARY KEY,
         tg_id INTEGER TYPE UNIQUE,
@@ -30,7 +35,7 @@ class Database:
         id INTEGER PRIMARY KEY,
         tg_id INTEGER TYPE UNIQUE,
         username VARCHAR(100));
-        '''
+    '''
 
     TABLES = [CREATE_REVIEW_TABLE, CREATE_CHAT_MESSAGES,
               CREATE_STICKERPACK_TABLE, CREATE_USER_LIST]
@@ -74,10 +79,17 @@ class Database:
         return self._execute_query(insert_query, (data['tg_id'], data['username']))
 
     def crete_review(self, data):
-        insert_query = '''INSERT INTO review (tg_id, username, review) 
-                values (?,?,?)'''
+        insert_query = '''INSERT INTO review (tg_id, username, role, personal_info, review) 
+                values (?,?,?,?,?)'''
         return self._execute_query(insert_query, (data['tg_id'], data['username'],
+                                                  data["role"], data["pers_info"],
                                                   data['review']))
+
+    def create_msg_to_all(self, data):
+        insert_query = '''INSERT INTO chat_msg (tg_id, username, name, grade, 
+        school, message) values (?,?,?,?,?,?)'''
+        return self._execute_query(insert_query, (data["tg_id"], data["username"], data["name"],
+                                   data["grade"],data["school"], data["text"]))
 
 
 database = Database(config.db.database)
