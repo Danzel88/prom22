@@ -9,10 +9,10 @@ from aiogram.contrib.fsm_storage.redis import RedisStorage2
 from tgbot.config import load_config
 from tgbot.filters.admin import AdminFilter
 from tgbot.filters.command import CommandFilter
-from tgbot.handlers.admin import register_admin
+from tgbot.handlers.admin import register_admin, register_sender
 from tgbot.handlers.echo import register_echo
 from tgbot.handlers.user import register_user
-from tgbot.services.set_commands import set_default_command
+from tgbot.services.set_commands import set_default_command, set_admin_commands
 from tgbot.middlewares.db import database as db
 
 logger = logging.getLogger(__name__)
@@ -31,12 +31,13 @@ def register_all_filters(dp):
 def register_all_handlers(dp):
     register_admin(dp)
     register_user(dp)
-
+    register_sender(dp, 490047)
     register_echo(dp)
 
 
 async def set_all_command(bot: Bot):
     await set_default_command(bot)
+    await set_admin_commands(bot)
 
 
 async def main():

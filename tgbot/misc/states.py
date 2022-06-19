@@ -19,6 +19,13 @@ class Chat(StatesGroup):
     wait_text = State()
 
 
+class Sender(StatesGroup):
+    waiting_init_admin = State()
+    waiting_message_from_admin = State()
+    waiting_message_from_admin_to_test_mailing = State()
+    waiting_message_id = State()
+
+
 async def state_setter(state: FSMContext, message):
     await state.update_data(tg_id=message.from_user.id,
                             username=message.from_user.username)

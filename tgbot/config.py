@@ -20,6 +20,7 @@ class TgBot:
     use_redis: bool
 
 
+
 @dataclass
 class Miscellaneous:
     other_params: str = None
@@ -31,11 +32,21 @@ class Commands:
 
 
 @dataclass
+class Google:
+    cred_file: str
+    chat_sheet_id: str
+    review_sheet_id: str
+    stickerpack_sheet_id: str
+    retrodisco: str
+
+
+@dataclass
 class Config:
     tg_bot: TgBot
     db: DbConfig
     misc: Miscellaneous
     commands: Commands
+    google: Google
 
 
 def load_config(path: str = None):
@@ -52,12 +63,20 @@ def load_config(path: str = None):
             host=env.str('DB_HOST'),
             # password=env.str('DB_PASS'),
             # user=env.str('DB_USER'),
-            database=env.str('DB_NAME')
+            database=env.str('DB_NAME'),
         ),
         misc=Miscellaneous(),
         commands=Commands(
             cmd=list(map(str, env.list("COMMANDS")))
+        ),
+        google=Google(
+            cred_file=env.str("CREDFILE"),
+            chat_sheet_id=env.str("PROM_CHAT_SHEET_ID"),
+            review_sheet_id=env.str("PROM_REVIEW_SHEET_ID"),
+            stickerpack_sheet_id=env.str("STICKERPACK_SHEET_ID"),
+            retrodisco=env.str("RETRODISCO_ID")
         )
+
     )
 
 

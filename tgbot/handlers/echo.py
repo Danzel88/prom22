@@ -1,3 +1,5 @@
+from asyncio import sleep
+
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.utils.markdown import hcode
@@ -11,7 +13,7 @@ async def bot_echo(message: types.Message):
         "Сообщение:",
         message.text
     ]
-
+    print(message)
     await message.answer('\n'.join(text))
 
 
@@ -23,15 +25,19 @@ async def bot_echo_all(message: types.Message, state: FSMContext):
     #     hcode(message.text)
     # ]
     print('echo handler')
-    print(type(state_name))
     print(state_name)
-    print(message.text)
-    if state_name == "Review:wait_review":
-        text = 'ты хотел оставить отзыв. но видимо передумал. ' \
-               'Если снова решишь написать отзыв, выбери соответсвующую команды '
-        await message.answer(text)
-        await states.Graduate.init_user.set()
-        return
+    try:
+        print("try block")
+        sticker_id = message['sticker']['file_id']
+        print(sticker_id)
+        await message.answer(f"id стикера {sticker_id}")
+    except TypeError:
+        if state_name == "Review:wait_review":
+            text = 'ты хотел оставить отзыв. но видимо передумал. ' \
+                   'Если снова решишь написать отзыв, выбери соответсвующую команды '
+            await message.answer(text)
+            await states.Graduate.init_user.set()
+            return
 
 
 def register_echo(dp: Dispatcher):

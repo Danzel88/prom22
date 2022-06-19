@@ -91,5 +91,11 @@ class Database:
         return self._execute_query(insert_query, (data["tg_id"], data["username"], data["name"],
                                    data["grade"],data["school"], data["text"]))
 
+    async def get_all_users(self):
+        get_query = f'''SELECT tg_id FROM all_users;'''
+        cursor = self._conn.cursor()
+        all_users = cursor.execute(get_query).fetchall()
+        return all_users
+
 
 database = Database(config.db.database)
