@@ -18,7 +18,7 @@ class Database:
     '''
     CREATE_CHAT_MESSAGES = '''CREATE TABLE chat_msg(
         id INTEGER PRIMARY KEY,
-        tg_id INTEGER TYPE UNIQUE,
+        tg_id INTEGER,
         username VARCHAR(100),
         name VARCHAR(100),
         grade VARCHAR(5),
@@ -44,7 +44,7 @@ class Database:
         self.name = name
         self._conn = self.connection()
 
-    def _execute_query(self, query, val):
+    async def _execute_query(self, query, val):
         cursor = self._conn.cursor()
         try:
             cursor.execute(query, val)
@@ -74,21 +74,21 @@ class Database:
             self.create_db()
         return sqlite3.connect(self.name)
 
-    def create_user(self, data):
+    async def create_user(self, data):
         insert_query = '''INSERT INTO all_users (tg_id, username) values (?,?)'''
-        return self._execute_query(insert_query, (data['tg_id'], data['username']))
+        return await self._execute_query(insert_query, (data['tg_id'], data['username']))
 
-    def crete_review(self, data):
+    async def crete_review(self, data):
         insert_query = '''INSERT INTO review (tg_id, username, role, personal_info, review) 
                 values (?,?,?,?,?)'''
-        return self._execute_query(insert_query, (data['tg_id'], data['username'],
+        return await self._execute_query(insert_query, (data['tg_id'], data['username'],
                                                   data["role"], data["pers_info"],
                                                   data['review']))
 
-    def create_msg_to_all(self, data):
+    async def create_msg_to_all(self, data):
         insert_query = '''INSERT INTO chat_msg (tg_id, username, name, grade, 
         school, message) values (?,?,?,?,?,?)'''
-        return self._execute_query(insert_query, (data["tg_id"], data["username"], data["name"],
+        return await self._execute_query(insert_query, (data["tg_id"], data["username"], data["name"],
                                    data["grade"],data["school"], data["text"]))
 
     async def get_all_users(self):

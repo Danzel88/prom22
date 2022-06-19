@@ -14,8 +14,7 @@ from tgbot.services.google_reader import GoogleReader
 
 
 async def user_start(message: Message, state: FSMContext):
-    st = await states.state_setter(state, message)
-    if db.create_user(st):
+    if await db.create_user({'tg_id': message.from_user.id, 'username': message.from_user.username}):
         await message.answer(dialogs.Messages.grete_msg)
         await sleep(0.5)
         await message.answer(dialogs.Messages.grete_msg2, reply_markup=MAIN_MENU)
@@ -46,11 +45,15 @@ async def get_map(message: Message):
 
 
 async def start_review(message: Message, state: FSMContext):
-    await states.Review.wait_role.set()
-    await message.answer(dialogs.Messages.start_review)
-    await sleep(0.5)
-    await message.answer(dialogs.Messages.user_role, reply_markup=REVIEW_ANSWER)
-    await states.state_setter(state, message)
+    repeat_review = await state.get_data()
+    if not repeat_review:
+        await states.Review.wait_role.set()
+        await message.answer(dialogs.Messages.start_review)
+        await sleep(0.5)
+        await message.answer(dialogs.Messages.user_role, reply_markup=REVIEW_ANSWER)
+        await states.state_setter(state, message)
+        return
+    await message.answer(dialogs.Messages.retry_review)
 
 
 async def get_role(message: Message, state: FSMContext):
@@ -73,12 +76,19 @@ async def review_done(message: Message, state: FSMContext):
     await state.update_data(review=message.text)
     await message.answer(dialogs.Messages.finish_review, reply_markup=MAIN_MENU)
     data = await state.get_data()
-    db.crete_review(data)
+    await db.crete_review(data)
+    await state.reset_data()
+    await state.update_data(review=True)
     await states.Graduate.init_user.set()
 
 
 async def start_msg_to_all(message: Message, state: FSMContext):
+    try:
+        data = await state.reset_data()
+    finally:
+        pass
     await states.state_setter(state, message)
+    await state.update_data(message_to_chat=0)
     await message.answer(dialogs.Messages.msg_to_all)
     await message.answer(dialogs.Messages.name_for_main_chat,
                          reply_markup=ReplyKeyboardRemove())
@@ -104,12 +114,19 @@ async def get_school_for_main_chat(message: Message, state: FSMContext):
 
 
 async def get_text_for_main_chat(message: Message, state: FSMContext):
+    counter = await state.get_data()
     if await censor(message.text):
-        await state.update_data(text=message.text)
-        await message.answer(dialogs.Messages.msg_for_main_chat_done)
-        await states.Graduate.init_user.set()
-        data = await state.get_data()
-        db.create_msg_to_all(data)
+        if counter['message_to_chat'] < 4:
+            await state.update_data(text=message.text)
+            await message.answer(dialogs.Messages.msg_for_main_chat_done,
+                                 reply_markup=MAIN_MENU)
+            await states.Graduate.init_user.set()
+            data = await state.get_data()
+            await db.create_msg_to_all(data)
+            tmp_data = await state.get_data()
+            await state.update_data(message_to_chat=tmp_data['message_to_chat']+1)
+            return
+        await message.answer("ты больше не можешь отправлять сообщения")
         return
     await message.answer(dialogs.Messages.censor_stop)
 
