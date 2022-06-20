@@ -15,6 +15,7 @@ from tgbot.services.google_writer import GoogleWriter
 
 conf = load_config('.env')
 
+
 async def user_start(message: Message, state: FSMContext):
     if await db.create_user({'tg_id': message.from_user.id, 'username': message.from_user.username}):
         await message.answer(dialogs.Messages.grete_msg)
@@ -90,17 +91,22 @@ async def get_school(message: Message, state: FSMContext):
 
 
 async def review_done(message: Message, state: FSMContext):
-    await state.update_data(review=message.text)
-    await message.answer(dialogs.Messages.finish_review, reply_markup=MAIN_MENU)
-    data = await state.get_data()
-    await db.crete_review(data)
-    data = list((await state.get_data()).values())
-    del(data[1])
-    review = GoogleWriter(conf.google.review_sheet_id, conf.google.cred_file)
-    review.data_writer([data], len(data))
-    # await state.reset_data()
-    await states.Graduate.init_user.set()
-
+    if await censor(message.text):
+        if message.text not in conf.commands.cmd:
+            await state.update_data(review=message.text)
+            await message.answer(dialogs.Messages.finish_review, reply_markup=MAIN_MENU)
+            data = await state.get_data()
+            await db.crete_review(data)
+            data = list((await state.get_data()).values())
+            del(data[1])
+            review = GoogleWriter(conf.google.review_sheet_id, conf.google.cred_file)
+            review.data_writer([data], len(data))
+            # await state.reset_data()
+            await states.Graduate.init_user.set()
+            return
+        await message.answer('Это команда')
+        return
+    await message.answer(dialogs.Messages.censor_stop)
 
 async def start_msg_to_all(message: Message, state: FSMContext):
     await states.state_setter(state, message)
