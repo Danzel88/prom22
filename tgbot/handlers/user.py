@@ -11,7 +11,9 @@ from tgbot.middlewares.censorship import censor
 from tgbot.misc import states, dialogs
 from tgbot.middlewares.db import database as db
 from tgbot.services.google_reader import GoogleReader
+from tgbot.services.google_writer import GoogleWriter
 
+conf = load_config('.env')
 
 async def user_start(message: Message, state: FSMContext):
     if await db.create_user({'tg_id': message.from_user.id, 'username': message.from_user.username}):
@@ -57,19 +59,34 @@ async def start_review(message: Message, state: FSMContext):
 
 
 async def get_role(message: Message, state: FSMContext):
-    for i in REVIEW_ANSWER.values['keyboard']:
-        if message.text == i[0]['text']:
-            await state.update_data(role=message.text)
-            await message.answer(dialogs.Messages.personal_info, reply_markup=ReplyKeyboardRemove())
-            await states.Review.next()
-            return
-    await message.answer(dialogs.Messages.not_in_answers_list)
+    if message.text not in conf.commands.cmd:
+        for i in REVIEW_ANSWER.values['keyboard']:
+            if message.text == i[0]['text']:
+                await state.update_data(role=message.text)
+                await message.answer(dialogs.Messages.review_name, reply_markup=ReplyKeyboardRemove())
+                await states.Review.next()
+                return
+        await message.answer(dialogs.Messages.not_in_answers_list)
+        return
+    await message.answer("Это команда")
 
 
-async def get_personal_info(message: Message, state: FSMContext):
-    await state.update_data(pers_info=message.text)
-    await message.answer(dialogs.Messages.comment_invite)
-    await states.Review.next()
+async def get_name(message: Message, state: FSMContext):
+    if message.text not in conf.commands.cmd:
+        await state.update_data(name=message.text)
+        await message.answer(dialogs.Messages.review_school)
+        await states.Review.next()
+        return
+    await message.answer("Это команда")
+
+
+async def get_school(message: Message, state: FSMContext):
+    if message.text not in conf.commands.cmd:
+        await state.update_data(school=message.text)
+        await message.answer(dialogs.Messages.comment_invite)
+        await states.Review.next()
+        return
+    await message.answer("Это команда")
 
 
 async def review_done(message: Message, state: FSMContext):
@@ -77,18 +94,16 @@ async def review_done(message: Message, state: FSMContext):
     await message.answer(dialogs.Messages.finish_review, reply_markup=MAIN_MENU)
     data = await state.get_data()
     await db.crete_review(data)
-    await state.reset_data()
-    await state.update_data(review=True)
+    data = list((await state.get_data()).values())
+    del(data[1])
+    review = GoogleWriter(conf.google.review_sheet_id, conf.google.cred_file)
+    review.data_writer([data], len(data))
+    # await state.reset_data()
     await states.Graduate.init_user.set()
 
 
 async def start_msg_to_all(message: Message, state: FSMContext):
-    try:
-        data = await state.reset_data()
-    finally:
-        pass
     await states.state_setter(state, message)
-    await state.update_data(message_to_chat=0)
     await message.answer(dialogs.Messages.msg_to_all)
     await message.answer(dialogs.Messages.name_for_main_chat,
                          reply_markup=ReplyKeyboardRemove())
@@ -96,37 +111,47 @@ async def start_msg_to_all(message: Message, state: FSMContext):
 
 
 async def get_name_for_main_chat(message: Message, state: FSMContext):
-    await state.update_data(name=message.text)
-    await message.answer(dialogs.Messages.grade_for_main_chat)
-    await states.Chat.next()
+    if message.text not in conf.commands.cmd:
+        await state.update_data(name=message.text)
+        await message.answer(dialogs.Messages.grade_for_main_chat)
+        await states.Chat.next()
+        return
+    await message.answer('Это команда')
 
 
 async def get_grade_for_main_chat(message: Message, state: FSMContext):
-    await state.update_data(grade=message.text)
-    await message.answer(dialogs.Messages.school_for_main_chat)
-    await states.Chat.next()
+    if message.text not in conf.commands.cmd:
+        await state.update_data(grade=message.text)
+        await message.answer(dialogs.Messages.school_for_main_chat)
+        await states.Chat.next()
+        return
+    await message.answer('Это команда')
 
 
 async def get_school_for_main_chat(message: Message, state: FSMContext):
-    await state.update_data(school=message.text)
-    await message.answer(dialogs.Messages.text_for_main_chat)
-    await states.Chat.next()
+    if message.text not in conf.commands.cmd:
+        await state.update_data(school=message.text)
+        await message.answer(dialogs.Messages.text_for_main_chat)
+        await states.Chat.next()
+        return
+    await message.answer('Это команда')
 
 
 async def get_text_for_main_chat(message: Message, state: FSMContext):
-    counter = await state.get_data()
     if await censor(message.text):
-        if counter['message_to_chat'] < 4:
+        if message.text not in conf.commands.cmd:
             await state.update_data(text=message.text)
             await message.answer(dialogs.Messages.msg_for_main_chat_done,
                                  reply_markup=MAIN_MENU)
             await states.Graduate.init_user.set()
-            data = await state.get_data()
-            await db.create_msg_to_all(data)
-            tmp_data = await state.get_data()
-            await state.update_data(message_to_chat=tmp_data['message_to_chat']+1)
+            raw_data = await state.get_data()
+            await db.create_msg_to_all(raw_data)
+            del(raw_data['username'])
+            clear_data = (list(raw_data.values()))
+            chat_msg_writer = GoogleWriter(conf.google.chat_sheet_id, conf.google.cred_file)
+            chat_msg_writer.data_writer([clear_data], len(clear_data))
             return
-        await message.answer("ты больше не можешь отправлять сообщения")
+        await message.answer('Это команда')
         return
     await message.answer(dialogs.Messages.censor_stop)
 
@@ -180,7 +205,8 @@ def register_user(dp: Dispatcher):
     dp.register_message_handler(start_review, text=MAIN_MENU.values["keyboard"][1][0]['text'],
                                 state=states.Graduate.init_user)
     dp.register_message_handler(get_role, state=states.Review.wait_role)
-    dp.register_message_handler(get_personal_info, state=states.Review.wait_personal_info)
+    dp.register_message_handler(get_name, state=states.Review.wait_name)
+    dp.register_message_handler(get_school, state=states.Review.wait_school)
     dp.register_message_handler(review_done, state=states.Review.wait_review)
 
     dp.register_message_handler(start_msg_to_all, commands=["msg_to_all"], state=states.Graduate.init_user)

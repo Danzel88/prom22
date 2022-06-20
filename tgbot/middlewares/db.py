@@ -13,7 +13,8 @@ class Database:
         tg_id INTEGER TYPE UNIQUE,
         username VARCHAR(100),
         role VARCHAR(10),
-        personal_info VARCHAR(255),
+        name VARCHAR(50),
+        school VARCHAR(50),
         review TEXT);
     '''
     CREATE_CHAT_MESSAGES = '''CREATE TABLE chat_msg(
@@ -79,17 +80,17 @@ class Database:
         return await self._execute_query(insert_query, (data['tg_id'], data['username']))
 
     async def crete_review(self, data):
-        insert_query = '''INSERT INTO review (tg_id, username, role, personal_info, review) 
-                values (?,?,?,?,?)'''
+        insert_query = '''INSERT INTO review (tg_id, username, role, name, school, review) 
+                values (?,?,?,?,?,?)'''
         return await self._execute_query(insert_query, (data['tg_id'], data['username'],
-                                                  data["role"], data["pers_info"],
+                                                  data["role"], data["name"], data['school'],
                                                   data['review']))
 
     async def create_msg_to_all(self, data):
         insert_query = '''INSERT INTO chat_msg (tg_id, username, name, grade, 
         school, message) values (?,?,?,?,?,?)'''
         return await self._execute_query(insert_query, (data["tg_id"], data["username"], data["name"],
-                                   data["grade"],data["school"], data["text"]))
+                                   data["grade"], data["school"], data["text"]))
 
     async def get_all_users(self):
         get_query = f'''SELECT tg_id FROM all_users;'''

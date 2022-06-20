@@ -8,7 +8,8 @@ class Graduate(StatesGroup):
 
 class Review(StatesGroup):
     wait_role = State()
-    wait_personal_info = State()
+    wait_name = State()
+    wait_school = State()
     wait_review = State()
 
 
