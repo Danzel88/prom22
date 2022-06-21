@@ -10,7 +10,7 @@ from tgbot.keyboards.reply import MAIN_MENU, EVENTS, REVIEW_ANSWER, FAQ, FQ
 from tgbot.middlewares.censorship import censor
 from tgbot.misc import states, dialogs
 from tgbot.middlewares.db import database as db
-from tgbot.services.google_reader import GoogleReader
+from tgbot.services.google_reader import GoogleDocReader
 from tgbot.services.google_writer import GoogleWriter
 
 conf = load_config('.env')
@@ -37,7 +37,7 @@ async def get_event_timing(message: Message):
 
 async def get_retro_disco(message: Message):
     conf = load_config('.env')
-    main_scene_timeline = GoogleReader(conf.google.retrodisco, conf.google.cred_file). \
+    main_scene_timeline = GoogleDocReader(conf.google.retrodisco, conf.google.cred_file). \
         get_data_from_gdocs()
     await message.answer('\n'.join(main_scene_timeline), parse_mode='HTML')
 

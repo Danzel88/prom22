@@ -4,6 +4,7 @@ from aiogram.types.bot_command_scope import BotCommandScopeAllChatAdministrators
 
 
 async def set_default_command(bot: Bot):
+    await bot.get_session()
     return await bot.set_my_commands(
         commands=[
             BotCommand('menu', 'Главное меню'),
@@ -18,11 +19,17 @@ async def set_default_command(bot: Bot):
     )
 
 
-async def set_admin_commands(bot: Bot):
+async def set_admin_command(bot: Bot):
+    await bot.get_session()
     return await bot.set_my_commands(
-        commands=[BotCommand('test_sender', 'Запуск тестовой рассылки'),
-                  BotCommand('sender', 'Запуск рассылки'),
-                  BotCommand('del_sender', 'Удаление рассылки')
+        commands=[BotCommand('sender', 'Запуск рассылки'),
+                  BotCommand('test', 'Запуск тестовой рассылки'),
+                  BotCommand('delete', 'Удаление рассылки'),
+                  BotCommand('post', 'Запустить отправку сообщений в канал')
         ],
         scope=BotCommandScopeAllChatAdministrators()
         )
+
+
+
+

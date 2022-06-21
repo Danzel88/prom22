@@ -27,6 +27,10 @@ class Sender(StatesGroup):
     waiting_message_id = State()
 
 
+class PostToChannel(StatesGroup):
+    wait_confirm_posting = State()
+
+
 async def state_setter(state: FSMContext, message):
     await state.update_data(tg_id=message.from_user.id,
                             username=message.from_user.username)

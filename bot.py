@@ -12,11 +12,11 @@ from tgbot.filters.command import CommandFilter
 from tgbot.handlers.admin import register_admin, register_sender
 from tgbot.handlers.echo import register_echo
 from tgbot.handlers.user import register_user
-from tgbot.services.set_commands import set_default_command, set_admin_commands
+from tgbot.services.set_commands import set_default_command, set_admin_command
 from tgbot.middlewares.db import database as db
 
 logger = logging.getLogger(__name__)
-
+config = load_config(".env")
 
 def register_all_middlewares(dp):
     pass
@@ -31,14 +31,13 @@ def register_all_filters(dp):
 def register_all_handlers(dp):
     register_admin(dp)
     register_user(dp)
-    register_sender(dp, 490047)
+    register_sender(dp)
     register_echo(dp)
 
 
 async def set_all_command(bot: Bot):
     await set_default_command(bot)
-    await set_admin_commands(bot)
-
+    await set_admin_command(bot)
 
 async def main():
     logging.basicConfig(
@@ -46,7 +45,7 @@ async def main():
         format=u'%(filename)s:%(lineno)d #%(levelname)-8s [%(asctime)s] - %(name)s - %(message)s',
     )
     logger.info("Starting bot")
-    config = load_config(".env")
+
 
     storage = RedisStorage2('localhost',
                             6379,
@@ -62,8 +61,8 @@ async def main():
     register_all_filters(dp)
     register_all_handlers(dp)
     await set_all_command(bot)
-    # start
     try:
+        # await bot.get_session()
         await dp.start_polling()
     finally:
         await dp.storage.close()
