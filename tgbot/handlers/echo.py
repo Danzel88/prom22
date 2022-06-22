@@ -24,13 +24,9 @@ async def bot_echo_all(message: types.Message, state: FSMContext):
     #     'Содержание сообщения:',
     #     hcode(message.text)
     # ]
-    print('echo handler')
-    print(state_name)
     try:
-        print("try block")
         sticker_id = message['sticker']['file_id']
-        print(sticker_id)
-        await message.answer(f"id стикера {sticker_id}")
+        await message.answer(sticker_id)
     except TypeError:
         if state_name == "Review:wait_review":
             text = 'ты хотел оставить отзыв. но видимо передумал. ' \
@@ -38,6 +34,7 @@ async def bot_echo_all(message: types.Message, state: FSMContext):
             await message.answer(text)
             await states.Graduate.init_user.set()
             return
+
 
 
 def register_echo(dp: Dispatcher):

@@ -1,7 +1,8 @@
 import json
 from asyncio import sleep
+from random import choice
 
-from aiogram import Dispatcher
+from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, InputFile, ReplyKeyboardRemove
 
@@ -10,20 +11,22 @@ from tgbot.keyboards.reply import MAIN_MENU, EVENTS, REVIEW_ANSWER, FAQ, FQ
 from tgbot.middlewares.censorship import censor
 from tgbot.misc import states, dialogs
 from tgbot.middlewares.db import database as db
+from tgbot.middlewares.data_cleaner import cleaner
+from tgbot.misc.stickers import sticker
 from tgbot.services.google_reader import GoogleDocReader
 from tgbot.services.google_writer import GoogleWriter
+
 
 conf = load_config('.env')
 
 
 async def user_start(message: Message, state: FSMContext):
-    if await db.create_user({'tg_id': message.from_user.id, 'username': message.from_user.username}):
-        await message.answer(dialogs.Messages.grete_msg)
-        await sleep(0.5)
-        await message.answer(dialogs.Messages.grete_msg2, reply_markup=MAIN_MENU)
+    if await db.insert_user({'tg_id': message.from_user.id, 'username': message.from_user.username}):
+        await message.answer(dialogs.Messages.grete_msg, reply_markup=MAIN_MENU)
         await states.Graduate.init_user.set()
+        await states.data_setter(state, message)
         return
-    await message.answer(dialogs.Messages.retry_start)
+    await message.answer(dialogs.Messages.retry_start, reply_markup=MAIN_MENU)
 
 
 async def get_main_menu(message: Message):
@@ -49,12 +52,14 @@ async def get_map(message: Message):
 
 async def start_review(message: Message, state: FSMContext):
     repeat_review = await state.get_data()
-    if not repeat_review:
-        await states.Review.wait_role.set()
-        await message.answer(dialogs.Messages.start_review)
-        await sleep(0.5)
-        await message.answer(dialogs.Messages.user_role, reply_markup=REVIEW_ANSWER)
-        await states.state_setter(state, message)
+    if not repeat_review.get('review'):
+        if await censor(message.text):
+            await states.Review.wait_role.set()
+            await message.answer(dialogs.Messages.start_review)
+            await sleep(0.5)
+            await message.answer(dialogs.Messages.user_role, reply_markup=REVIEW_ANSWER)
+            return
+        await message.answer(dialogs.Messages.censor_stop)
         return
     await message.answer(dialogs.Messages.retry_review)
 
@@ -64,7 +69,12 @@ async def get_role(message: Message, state: FSMContext):
         for i in REVIEW_ANSWER.values['keyboard']:
             if message.text == i[0]['text']:
                 await state.update_data(role=message.text)
-                await message.answer(dialogs.Messages.review_name, reply_markup=ReplyKeyboardRemove())
+                await message.answer(dialogs.Messages.pers_info, reply_markup=ReplyKeyboardRemove())
+                await states.Review.next()
+                return
+            elif message.text == "Родитель":
+                await state.update_data(role=message.text)
+                await message.answer(dialogs.Messages.pers_info_for_parents, reply_markup=ReplyKeyboardRemove())
                 await states.Review.next()
                 return
         await message.answer(dialogs.Messages.not_in_answers_list)
@@ -72,22 +82,22 @@ async def get_role(message: Message, state: FSMContext):
     await message.answer("Это команда")
 
 
-async def get_name(message: Message, state: FSMContext):
+async def get_pers_info(message: Message, state: FSMContext):
     if message.text not in conf.commands.cmd:
-        await state.update_data(name=message.text)
-        await message.answer(dialogs.Messages.review_school)
-        await states.Review.next()
-        return
-    await message.answer("Это команда")
-
-
-async def get_school(message: Message, state: FSMContext):
-    if message.text not in conf.commands.cmd:
-        await state.update_data(school=message.text)
+        await state.update_data(pers_info=message.text)
         await message.answer(dialogs.Messages.comment_invite)
         await states.Review.next()
         return
     await message.answer("Это команда")
+
+#Может быть придется собирать отдельно имя и школу
+# async def get_school(message: Message, state: FSMContext):
+#     if message.text not in conf.commands.cmd:
+#         await state.update_data(school=message.text)
+#         await message.answer(dialogs.Messages.comment_invite)
+#         await states.Review.next()
+#         return
+#     await message.answer("Это команда")
 
 
 async def review_done(message: Message, state: FSMContext):
@@ -95,22 +105,22 @@ async def review_done(message: Message, state: FSMContext):
         if message.text not in conf.commands.cmd:
             await state.update_data(review=message.text)
             await message.answer(dialogs.Messages.finish_review, reply_markup=MAIN_MENU)
-            data = await state.get_data()
-            await db.crete_review(data)
-            data = list((await state.get_data()).values())
-            del(data[1])
+            raw_data = await state.get_data()
+            str_state = await state.get_state()
+            await db.insert_review(raw_data)
+            clear_data = await cleaner(raw_data, str_state)
             review = GoogleWriter(conf.google.review_sheet_id, conf.google.cred_file)
-            review.data_writer([data], len(data))
-            # await state.reset_data()
+            review.data_writer([clear_data], len(clear_data))
             await states.Graduate.init_user.set()
             return
         await message.answer('Это команда')
         return
     await message.answer(dialogs.Messages.censor_stop)
 
+
 async def start_msg_to_all(message: Message, state: FSMContext):
-    await states.state_setter(state, message)
     await message.answer(dialogs.Messages.msg_to_all)
+    await sleep(0.5)
     await message.answer(dialogs.Messages.name_for_main_chat,
                          reply_markup=ReplyKeyboardRemove())
     await states.Chat.wait_name.set()
@@ -119,19 +129,19 @@ async def start_msg_to_all(message: Message, state: FSMContext):
 async def get_name_for_main_chat(message: Message, state: FSMContext):
     if message.text not in conf.commands.cmd:
         await state.update_data(name=message.text)
-        await message.answer(dialogs.Messages.grade_for_main_chat)
-        await states.Chat.next()
-        return
-    await message.answer('Это команда')
-
-
-async def get_grade_for_main_chat(message: Message, state: FSMContext):
-    if message.text not in conf.commands.cmd:
-        await state.update_data(grade=message.text)
         await message.answer(dialogs.Messages.school_for_main_chat)
         await states.Chat.next()
         return
     await message.answer('Это команда')
+
+#
+# async def get_grade_for_main_chat(message: Message, state: FSMContext):
+#     if message.text not in conf.commands.cmd:
+#         await state.update_data(grade=message.text)
+#         await message.answer(dialogs.Messages.school_for_main_chat)
+#         await states.Chat.next()
+#         return
+#     await message.answer('Это команда')
 
 
 async def get_school_for_main_chat(message: Message, state: FSMContext):
@@ -149,13 +159,13 @@ async def get_text_for_main_chat(message: Message, state: FSMContext):
             await state.update_data(text=message.text)
             await message.answer(dialogs.Messages.msg_for_main_chat_done,
                                  reply_markup=MAIN_MENU)
-            await states.Graduate.init_user.set()
             raw_data = await state.get_data()
-            await db.create_msg_to_all(raw_data)
-            del(raw_data['username'])
-            clear_data = (list(raw_data.values()))
+            str_state = await state.get_state()
+            await db.insert_msg_to_all(raw_data)
+            clear_data = await cleaner(raw_data, str_state)
             chat_msg_writer = GoogleWriter(conf.google.chat_sheet_id, conf.google.cred_file)
             chat_msg_writer.data_writer([clear_data], len(clear_data))
+            await states.Graduate.init_user.set()
             return
         await message.answer('Это команда')
         return
@@ -168,9 +178,18 @@ async def get_photo_link(message: Message):
 
 async def sticker_pack(message: Message):
     await message.answer(dialogs.Messages.sticker_pack_first)
-    await message.answer_sticker("CAACAgIAAxkBAAIFnmKvKaYh1Jdf5Dc-xbgTZyxq7olcAAJHAQACe04qEC2-TTtxjiCwJAQ")
+    await message.answer_sticker(choice(sticker))
     await sleep(0.5)
     await message.answer(dialogs.Messages.sticker_pack_second)
+
+
+async def sticker_catch(message: Message):
+    tag = message.text.split()
+    if ' '.join(tag[:2]).lower() == 'мой стикер':
+        sticker_phrase_writer = GoogleWriter(conf.google.stickerpack_sheet_id,
+                                             conf.google.cred_file)
+        data = [message.from_user.username, message.text[3::]]
+        sticker_phrase_writer.data_writer([data], len(data))
 
 
 async def get_faq(message: Message):
@@ -211,15 +230,14 @@ def register_user(dp: Dispatcher):
     dp.register_message_handler(start_review, text=MAIN_MENU.values["keyboard"][1][0]['text'],
                                 state=states.Graduate.init_user)
     dp.register_message_handler(get_role, state=states.Review.wait_role)
-    dp.register_message_handler(get_name, state=states.Review.wait_name)
-    dp.register_message_handler(get_school, state=states.Review.wait_school)
+    dp.register_message_handler(get_pers_info, state=states.Review.wait_pers_info)
     dp.register_message_handler(review_done, state=states.Review.wait_review)
 
     dp.register_message_handler(start_msg_to_all, commands=["msg_to_all"], state=states.Graduate.init_user)
     dp.register_message_handler(start_msg_to_all, text=MAIN_MENU.values["keyboard"][1][1]['text'],
                                 state=states.Graduate.init_user)
     dp.register_message_handler(get_name_for_main_chat, state=states.Chat.wait_name)
-    dp.register_message_handler(get_grade_for_main_chat, state=states.Chat.wait_grade)
+    # dp.register_message_handler(get_grade_for_main_chat, state=states.Chat.wait_grade)
     dp.register_message_handler(get_school_for_main_chat, state=states.Chat.wait_school)
     dp.register_message_handler(get_text_for_main_chat, state=states.Chat.wait_text)
 
@@ -231,6 +249,7 @@ def register_user(dp: Dispatcher):
     dp.register_message_handler(sticker_pack, commands=['stickerpack'], state=states.Graduate.init_user)
     dp.register_message_handler(sticker_pack, text=MAIN_MENU.values["keyboard"][2][1]['text'],
                                 state=states.Graduate.init_user)
+    dp.register_message_handler(sticker_catch, state="*")
 
     dp.register_message_handler(get_faq, commands=['fqa'], state=states.Graduate.init_user)
     dp.register_message_handler(get_faq, text=MAIN_MENU.values["keyboard"][3][1]['text'],

@@ -8,14 +8,13 @@ class Graduate(StatesGroup):
 
 class Review(StatesGroup):
     wait_role = State()
-    wait_name = State()
-    wait_school = State()
+    wait_pers_info = State()
     wait_review = State()
 
 
 class Chat(StatesGroup):
     wait_name = State()
-    wait_grade = State()
+    # wait_grade = State()
     wait_school = State()
     wait_text = State()
 
@@ -31,7 +30,7 @@ class PostToChannel(StatesGroup):
     wait_confirm_posting = State()
 
 
-async def state_setter(state: FSMContext, message):
+async def data_setter(state: FSMContext, message):
     await state.update_data(tg_id=message.from_user.id,
                             username=message.from_user.username)
     user_state = await state.get_data()

@@ -13,8 +13,7 @@ class Database:
         tg_id INTEGER TYPE UNIQUE,
         username VARCHAR(100),
         role VARCHAR(10),
-        name VARCHAR(50),
-        school VARCHAR(50),
+        pers_info VARCHAR(255),
         review TEXT);
     '''
     CREATE_CHAT_MESSAGES = '''CREATE TABLE chat_msg(
@@ -22,7 +21,6 @@ class Database:
         tg_id INTEGER,
         username VARCHAR(100),
         name VARCHAR(100),
-        grade VARCHAR(5),
         school VARCHAR(100),
         message VARCHAR(201));
     '''
@@ -75,22 +73,24 @@ class Database:
             self.create_db()
         return sqlite3.connect(self.name)
 
-    async def create_user(self, data):
+    async def insert_user(self, data):
         insert_query = '''INSERT INTO all_users (tg_id, username) values (?,?)'''
         return await self._execute_query(insert_query, (data['tg_id'], data['username']))
 
-    async def crete_review(self, data):
-        insert_query = '''INSERT INTO review (tg_id, username, role, name, school, review) 
-                values (?,?,?,?,?,?)'''
+    async def insert_review(self, data):
+        insert_query = '''INSERT INTO review (tg_id, username, role, pers_info, review) 
+                values (?,?,?,?,?)'''
         return await self._execute_query(insert_query, (data['tg_id'], data['username'],
-                                                  data["role"], data["name"], data['school'],
-                                                  data['review']))
+                                                        data["role"], data["pers_info"],
+                                                        data['review']))
 
-    async def create_msg_to_all(self, data):
-        insert_query = '''INSERT INTO chat_msg (tg_id, username, name, grade, 
-        school, message) values (?,?,?,?,?,?)'''
+    async def insert_msg_to_all(self, data):
+        insert_query = '''INSERT INTO chat_msg (tg_id, username, name, school, message)
+                values (?,?,?,?,?)'''
         return await self._execute_query(insert_query, (data["tg_id"], data["username"], data["name"],
-                                   data["grade"], data["school"], data["text"]))
+                                                        data["school"], data["text"]))
+
+
 
     async def get_all_users(self):
         get_query = f'''SELECT tg_id FROM all_users;'''

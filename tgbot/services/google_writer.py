@@ -15,9 +15,9 @@ val = [['1', 'Parrent', 'Den, 1', "All event super cool!!!!"],
 
 
 class GoogleWriter:
-    review_headers = [['Tg ID', 'Роль', 'Имя', 'Школа', 'Отзыв']]
-    chat_sheet_headers = [['Tg ID', 'Имя','Класс', 'Школа', 'Сообщение']]
-    sticker_pack_headers = [['Tg ID', 'Имя', 'Фраза']]
+    review_headers = [['Tg ID', 'Роль', 'Имя и школа', 'Отзыв']]
+    chat_sheet_headers = [['Tg ID', 'Имя', 'Школа', 'Сообщение']]
+    sticker_pack_headers = [['Tg ID', 'Фраза']]
 
     def __init__(self, spreadsheet_id: str, cred_file: str, ):
         self._spreadsheet_id = spreadsheet_id
@@ -57,7 +57,7 @@ class GoogleWriter:
         http_auth = credential.authorize(httplib2.Http())
         return discovery.build("sheets", "v4", http=http_auth, cache_discovery=False)
 
-    def data_writer(self, data, coll_quantity: int):
+    def data_writer(self, data: list, coll_quantity: int):
         coll_letter = string.ascii_uppercase[:coll_quantity]
         if self._check_header(coll_letter).get('values') is None:
             self._create_sheets_header(coll_letter)
