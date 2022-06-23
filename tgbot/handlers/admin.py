@@ -90,7 +90,7 @@ async def test_sender(message: types.Message, state: FSMContext):
     """тестовая рассылка. Сообщение придет только админу"""
     sent_message = {}
     try:
-        await send_message(user_id=config.tg_bot.admin_ids[0], message=message)
+        await send_message(user_id=config.tg_bot.admin_ids, message=message)
         sent_message[message.from_user.id] = message.message_id + 1
     except IndexError:
         logging.error(f'нет пользователей для отправки')
