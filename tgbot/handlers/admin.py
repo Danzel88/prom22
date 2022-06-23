@@ -33,15 +33,19 @@ def register_admin(dp: Dispatcher):
     dp.register_message_handler(admin_start, commands=["start"], state="*", is_admin=True)
 
 
-formatter = '[%(asctime)s] %(levelname)8s --- %(message)s (%(filename)s:%(lineno)s)'
-# warnings.filterwarnings("ignore", category=DeprecationWarning)
+# formatter = '[%(asctime)s] %(levelname)8s --- %(message)s (%(filename)s:%(lineno)s)'
 # logging.basicConfig(
-#     filename=f'tgbot/log/bot-from-{datetime.datetime.now().date()}.log',
+#     filename=f'tgbot/log/log-from-sender{datetime.datetime.now().date()}.log',
 #     filemode='w',
 #     format=formatter,
 #     datefmt='%Y-%m-%d %H:%M:%S',
 #     level=logging.WARNING
 # )
+#
+# logger = logging.getLogger(__name__)
+
+
+
 
 
 async def init_sender_state(message: types.Message):
@@ -82,24 +86,25 @@ async def send_message(message: types.Message,
     else:
         logging.warning(f"Target [ID:{user_id}]: success.")
         return True
-    # await bot.session.close()
+    await bot.session.close()
     return False
 
 
 async def test_sender(message: types.Message, state: FSMContext):
     """тестовая рассылка. Сообщение придет только админу"""
     sent_message = {}
-    for u in config.tg_bot.admin_ids:
-        try:
-            await send_message(user_id=u, message=message)
-            sent_message[message.from_user.id] = message.message_id + 1
-
-        except IndexError:
-            logging.error(f'нет пользователей для отправки')
-    with open(f"sender_data/{message.message_id + 1}.json", 'w') as f:
-        json.dump(sent_message, f)
-    await message.answer(f'Номер рассылки для удаления {int(message.message_id) + 1}')
-    await state.finish()
+    # for u in config.tg_bot.admin_ids:
+    try:
+        await send_message(user_id=message.from_user.id, message=message)
+        sent_message[message.from_user.id] = message.message_id + 1
+        await bot.session.close()
+    except IndexError:
+        logging.error(f'нет пользователей для отправки')
+    finally:
+    #     with open(f"sender_data/{message.message_id + 1}.json", 'w') as f:
+    #         json.dump(sent_message, f)
+        await message.answer(f'Номер рассылки для удаления {int(message.message_id) + 1}')
+        await state.finish()
 
 
 

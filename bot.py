@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import logging
 
 import aiogram
@@ -16,6 +17,7 @@ from tgbot.services.set_commands import set_default_command, set_admin_command
 from tgbot.middlewares.db import database as db
 
 logger = logging.getLogger(__name__)
+
 config = load_config(".env")
 
 def register_all_middlewares(dp):
@@ -46,8 +48,6 @@ async def main():
         format=u'%(filename)s:%(lineno)d #%(levelname)-8s [%(asctime)s] - %(name)s - %(message)s',
     )
     logger.info("Starting bot")
-
-
     storage = RedisStorage2('localhost',
                             6379,
                             db=4,
