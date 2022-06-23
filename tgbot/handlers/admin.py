@@ -89,16 +89,18 @@ async def send_message(message: types.Message,
 async def test_sender(message: types.Message, state: FSMContext):
     """тестовая рассылка. Сообщение придет только админу"""
     sent_message = {}
-    try:
-        await send_message(user_id=config.tg_bot.admin_ids, message=message)
-        sent_message[message.from_user.id] = message.message_id + 1
-    except IndexError:
-        logging.error(f'нет пользователей для отправки')
-    finally:
-        await message.answer(f'Номер рассылки для удаления {int(message.message_id) + 1}')
-        await state.finish()
-        with open(f"sender_data/{message.message_id + 1}.json", 'w') as f:
-            json.dump(sent_message, f)
+    for u in config.tg_bot.admin_ids:
+        try:
+            await send_message(user_id=u, message=message)
+            sent_message[message.from_user.id] = message.message_id + 1
+
+        except IndexError:
+            logging.error(f'нет пользователей для отправки')
+    with open(f"sender_data/{message.message_id + 1}.json", 'w') as f:
+        json.dump(sent_message, f)
+    await message.answer(f'Номер рассылки для удаления {int(message.message_id) + 1}')
+    await state.finish()
+
 
 
 async def start_spam(message: types.Message, state: FSMContext):
