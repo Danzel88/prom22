@@ -39,6 +39,7 @@ async def set_all_command(bot: Bot):
     await set_default_command(bot)
     await set_admin_command(bot)
 
+
 async def main():
     logging.basicConfig(
         level=logging.INFO,

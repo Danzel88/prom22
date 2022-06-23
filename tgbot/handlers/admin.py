@@ -171,7 +171,7 @@ async def post_to_channel(message: Message):
 
 
 def register_sender(dp: Dispatcher):
-    dp.register_message_handler(init_sender_state,  commands=["sender","test"], state="*", is_admin=True)
+    dp.register_message_handler(init_sender_state,  commands=["sender", "test"], state="*", is_admin=True)
     # dp.register_message_handler(init_sender_state, commands="test", state="*", is_admin=True)
     dp.register_message_handler(del_init, commands="delete", state="*", is_admin=True)
     dp.register_message_handler(delete_send_message, state=Sender.waiting_message_id, is_admin=True)

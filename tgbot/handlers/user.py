@@ -183,13 +183,13 @@ async def sticker_pack(message: Message):
     await message.answer(dialogs.Messages.sticker_pack_second)
 
 
-async def sticker_catch(message: Message):
-    tag = message.text.split()
-    if ' '.join(tag[:2]).lower() == 'мой стикер':
-        sticker_phrase_writer = GoogleWriter(conf.google.stickerpack_sheet_id,
-                                             conf.google.cred_file)
-        data = [message.from_user.username, message.text[3::]]
-        sticker_phrase_writer.data_writer([data], len(data))
+# async def sticker_catch(message: Message):
+#     tag = message.text.split()
+#     if ' '.join(tag[:2]).lower() == 'мой стикер':
+#         sticker_phrase_writer = GoogleWriter(conf.google.stickerpack_sheet_id,
+#                                              conf.google.cred_file)
+#         data = [message.from_user.username, message.text[3::]]
+#         sticker_phrase_writer.data_writer([data], len(data))
 
 
 async def get_faq(message: Message):
@@ -249,7 +249,7 @@ def register_user(dp: Dispatcher):
     dp.register_message_handler(sticker_pack, commands=['stickerpack'], state=states.Graduate.init_user)
     dp.register_message_handler(sticker_pack, text=MAIN_MENU.values["keyboard"][2][1]['text'],
                                 state=states.Graduate.init_user)
-    dp.register_message_handler(sticker_catch, state="*")
+    # dp.register_message_handler(sticker_catch, state="*")
 
     dp.register_message_handler(get_faq, commands=['fqa'], state=states.Graduate.init_user)
     dp.register_message_handler(get_faq, text=MAIN_MENU.values["keyboard"][3][1]['text'],
