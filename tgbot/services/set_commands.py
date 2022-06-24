@@ -11,9 +11,10 @@ async def set_default_command(bot: Bot):
             BotCommand('event_program', 'Программа'),
             BotCommand('map', 'Карта'),
             BotCommand('review', 'Отзывы'),
-            BotCommand('msg_to_all', 'Сообщение на экран'),
+            BotCommand('msg_to_all', 'Сообщение в чат или на экран'),
             BotCommand('photo_gallery', 'Фотоальбом'),
             BotCommand('stickerpack', 'Стикерпак'),
+            BotCommand('chat_on', 'Онлайн-чат'),
             BotCommand('faq', 'Справка'),
         ]
     )

@@ -4,11 +4,9 @@ from googleapiclient import discovery
 import httplib2
 from oauth2client.service_account import ServiceAccountCredentials
 
-
-
-
-#debug data
+# debug data
 from tgbot.config import load_config
+
 config = load_config('.env')
 val = [['1', 'Parrent', 'Den, 1', "All event super cool!!!!"],
        ['2', 'Teacher', 'John, 2', "All event super cool!!!!"]]
@@ -16,7 +14,7 @@ val = [['1', 'Parrent', 'Den, 1', "All event super cool!!!!"],
 
 class GoogleWriter:
     review_headers = [['Tg ID', 'Роль', 'Имя и школа', 'Отзыв']]
-    chat_sheet_headers = [['Tg ID', 'Имя', 'Школа', 'Сообщение']]
+    chat_sheet_headers = [['Tg ID', 'Имя', 'Школа', 'Сообщение', 'Проверено']]
     sticker_pack_headers = [['Tg ID', 'Фраза']]
 
     def __init__(self, spreadsheet_id: str, cred_file: str, ):
@@ -38,6 +36,7 @@ class GoogleWriter:
                 headers = self.chat_sheet_headers
             case config.google.stickerpack_sheet_id:
                 headers = self.sticker_pack_headers
+
         self._service.spreadsheets().values().batchUpdate(
             spreadsheetId=self._spreadsheet_id,
             body={
@@ -45,8 +44,8 @@ class GoogleWriter:
                 "data": [
                     {"range": f'{coll_letter[0]}1:{coll_letter[-1]}1',
                      "majorDimension": "ROWS",
-                     "values": headers}]})\
-            .execute()
+                     "values": headers}]}).execute()
+
 
     def _service_builder(self):
         credential = ServiceAccountCredentials. \
@@ -56,6 +55,20 @@ class GoogleWriter:
                                    )
         http_auth = credential.authorize(httplib2.Http())
         return discovery.build("sheets", "v4", http=http_auth, cache_discovery=False)
+
+    # def insert_checkbox(self, coll_letter):
+    #     self._service.spreadsheets().values().batchUpdate(
+    #         spreadsheetId=self._spreadsheet_id,
+    #         body={
+    #             [{'repeatCell':
+    #                  {'cell': {'dataValidation': {'condition': {'type': 'BOOLEAN'}}},
+    #                   'range': {'sheetId': 0, 'startRowIndex': 1, 'endRowIndex': 1,
+    #                             'startColumnIndex': 4,
+    #                             'endColumnIndex': 5},
+    #                   'fields': 'dataValidation'
+    #                   }
+    #              }]
+    #         }).execute()
 
     def data_writer(self, data: list, coll_quantity: int):
         coll_letter = string.ascii_uppercase[:coll_quantity]
@@ -67,7 +80,6 @@ class GoogleWriter:
             valueInputOption="USER_ENTERED",
             body={"majorDimension": "ROWS",
                   "values": data}).execute()
-
 
 # test = GoogleWriter(config.google.review_sheet_id, config.google.cred_file)
 # test.data_writer(val, len(val[0]))

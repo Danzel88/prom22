@@ -1,7 +1,6 @@
-from tgbot.config import ListOfButtons
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-CHANEL_REDIRECT = ListOfButtons(
-    text=["Канал чата"],
-    callback=[],
-    align=[1],
-).inline_keyboard
+online_chat_btn = InlineKeyboardButton("Онлайн-чат Московского выпускного",
+                                       url="https://t.me/prom_2022")
+
+CHANEL_LINK = InlineKeyboardMarkup().add(online_chat_btn)

@@ -45,16 +45,14 @@ def register_admin(dp: Dispatcher):
 # logger = logging.getLogger(__name__)
 
 
-
-
-
-async def init_sender_state(message: types.Message):
+async def init_sender_state(message: types.Message, state: FSMContext):
     """инициализация рассылки"""
     if "test" in message.text:
         await message.answer(f'{SenderMessages.message_for_test_sender}', parse_mode="HTML", reply_markup=types.ReplyKeyboardRemove())
         await Sender.waiting_message_from_admin_to_test_mailing.set()
         return
     await message.answer(f'{SenderMessages.message_for_sender}', parse_mode="HTML", reply_markup=types.ReplyKeyboardRemove())
+    await state.finish()
     await Sender.waiting_message_from_admin.set()
 
 
@@ -67,6 +65,7 @@ async def send_message(message: types.Message,
             await bot.send_message(chat_id=user_id, text=message.text,
                                    disable_notification=disable_notification,
                                    parse_mode="HTML")
+
         elif message.photo is not None:
             await bot.get_session()
             await bot.send_photo(chat_id=user_id, photo=message.photo[-1].file_id, caption=message.caption,
@@ -101,10 +100,10 @@ async def test_sender(message: types.Message, state: FSMContext):
     except IndexError:
         logging.error(f'нет пользователей для отправки')
     finally:
-    #     with open(f"sender_data/{message.message_id + 1}.json", 'w') as f:
-    #         json.dump(sent_message, f)
+        with open(f"sender_data/{message.message_id + 1}.json", 'w') as f:
+            json.dump(sent_message, f)
         await message.answer(f'Номер рассылки для удаления {int(message.message_id) + 1}')
-        await state.finish()
+        await states.Graduate.init_user.set()
 
 
 

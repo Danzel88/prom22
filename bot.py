@@ -34,7 +34,7 @@ def register_all_handlers(dp):
     # register_admin(dp)
     register_user(dp)
     register_sender(dp)
-    register_echo(dp)
+    # register_echo(dp)
 
 
 async def set_all_command(bot: Bot):

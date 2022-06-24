@@ -24,9 +24,15 @@ async def bot_echo_all(message: types.Message, state: FSMContext):
     #     'Содержание сообщения:',
     #     hcode(message.text)
     # ]
+    print()
     try:
         sticker_id = message['sticker']['file_id']
-        await message.answer(sticker_id)
+        doc_id = message['document']['file_id']
+        if sticker_id:
+            await message.answer(sticker_id)
+        elif doc_id:
+            await message.answer(doc_id)
+
     except TypeError:
         if state_name == "Review:wait_review":
             text = 'ты хотел оставить отзыв. но видимо передумал. ' \
