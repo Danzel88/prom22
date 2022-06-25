@@ -158,7 +158,7 @@ async def start_msg_to_all(message: Message, state: FSMContext):
         await states.Chat.wait_name.set()
         return
     else:
-        await message.answer("Твое сообщение уже получено")
+        await message.answer(dialogs.Messages.msg_limit)
 
 
 
