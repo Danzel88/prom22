@@ -50,9 +50,11 @@ async def get_programs(message: Message):
         case Events.disco_scene:
             await message.answer_photo(InputFile('data/event_timing/disco_scene.jpg'))
         case Events.quiet_disco:
-            await message.answer(dialogs.NoPicProgram.quiet_disco)
+            await message.answer_photo(InputFile("data/event_timing/quiet_disco.png"),
+                                       caption=dialogs.NoPicProgram.quiet_disco)
         case Events.game_zone:
-            await message.answer(dialogs.NoPicProgram.game_zone)
+            await message.answer_photo(InputFile("data/event_timing/game_zone.png"),
+                                       caption=dialogs.NoPicProgram.game_zone)
         case Events.quiz_please:
             await message.answer(dialogs.NoPicProgram.quiz_please)
         case Events.comic_show:
@@ -60,10 +62,12 @@ async def get_programs(message: Message):
             await message.answer_photo(InputFile("data/event_timing/comic_2.jpg"))
             await message.answer_photo(InputFile("data/event_timing/comic_3.jpg"))
         case Events.extreme:
-            await message.answer(dialogs.NoPicProgram.extreme,
+            await message.answer_photo(InputFile("data/event_timing/extreme.png"),
+                                       caption=dialogs.NoPicProgram.extreme,
                                  parse_mode=ParseMode.HTML)
         case Events.young_people:
-            await message.answer(dialogs.NoPicProgram.young_people)
+            await message.answer_photo(InputFile("data/event_timing/young_people.png"),
+                                       caption=dialogs.NoPicProgram.young_people)
 
 
 async def get_map(message: Message):
