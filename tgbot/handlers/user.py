@@ -270,7 +270,7 @@ def register_user(dp: Dispatcher):
                                 state=states.Graduate.init_user)
     # dp.register_message_handler(sticker_catch, state="*")
 
-    dp.register_message_handler(online_chat, commands="msg_to_all", state=states.Graduate.init_user)
+    dp.register_message_handler(online_chat, commands="chat_on", state=states.Graduate.init_user)
     dp.register_message_handler(online_chat, text="Онлайн-чат", state=states.Graduate.init_user)
 
     dp.register_message_handler(get_faq, commands=['fqa'], state=states.Graduate.init_user)
