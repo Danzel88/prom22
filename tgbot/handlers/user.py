@@ -24,6 +24,7 @@ async def user_start(message: Message, state: FSMContext):
     if await db.insert_user({'tg_id': message.from_user.id, 'username': message.from_user.username}):
         await message.answer(dialogs.Messages.grete_msg, reply_markup=MAIN_MENU)
         await states.data_setter(state, message)
+        await states.Graduate.init_user.set()
         return
     await states.Graduate.init_user.set()
     await message.answer(dialogs.Messages.retry_start, reply_markup=MAIN_MENU)
