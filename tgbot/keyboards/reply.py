@@ -16,7 +16,7 @@ class FQ:
 @dataclass
 class Events:
     main_scene: str = "⭐️Главная сцена"
-    quay_scene: str = "⛵️Электросцена"
+    electroscene: str = "⛵️Электросцена"
     water_show: str = "🎭Шоу на воде"
     disco_scene: str = "🕺Диско-сцена"
     quiet_disco: str = "🎧Тихая дискотека"
@@ -45,7 +45,7 @@ MAIN_MENU = ListOfButtons(
 
 EVENTS = ListOfButtons(
     text=[Events.main_scene,
-          Events.quay_scene,
+          Events.electroscene,
           Events.water_show,
           Events.disco_scene,
           Events.quiet_disco,

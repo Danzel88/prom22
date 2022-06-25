@@ -1,18 +1,15 @@
-import warnings
-
 from aiogram import types, Bot
-from aiogram.dispatcher.filters import IDFilter
-from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from aiogram.types import Message, ParseMode, ReplyKeyboardMarkup, ReplyKeyboardRemove
 import asyncio
-import datetime
 import json
 import logging
 from aiogram.utils.exceptions import MessageToDeleteNotFound
+
+from tgbot.keyboards.reply import MAIN_MENU
+from tgbot.middlewares.data_cleaner import format_msg_to_chat
 from tgbot.misc import states
-from tgbot.misc.states import Sender, PostToChannel
-# from aiogram import types
+from tgbot.misc.states import Sender, PostToChannel, Graduate
 from aiogram.dispatcher import Dispatcher, FSMContext
-# from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.utils import exceptions
 from tgbot.misc.dialogs import SenderMessages
 from tgbot.config import load_config
@@ -166,14 +163,36 @@ async def posts_init(message: Message):
     await PostToChannel.wait_confirm_posting.set()
 
 
-async def post_to_channel(message: Message):
-    raw_data = GoogleSheetReader(config.google.chat_sheet_id, config.google.cred_file)
-    data = raw_data.get_data_from_gsheet()
-    await PostToChannel.first()
-    await bot.get_session()
-    await bot.send_message(chat_id='-1001643778907', text=data[0])
-    await bot.session.close()
-    await message.answer("Сообщения ушли", reply_markup=ReplyKeyboardRemove())
+async def post_to_channel(message: Message, state: FSMContext):
+    if message.text == "Yes":
+        raw_data = GoogleSheetReader(config.google.chat_sheet_id, config.google.cred_file)
+        try:
+            start_row = await state.get_data()
+            print(start_row)
+            mc = start_row['mc']
+            data = raw_data.get_data_from_gsheet(start=int(mc))
+        except KeyError:
+            data = raw_data.get_data_from_gsheet()
+        await message.answer("Начал отпрвку сообщений, это займет время")
+        await PostToChannel.first()
+        for i in data:
+            match i[-1]:
+                case "Ok":
+                    clear_message = await format_msg_to_chat(i)
+                    await bot.get_session()
+                    await bot.send_message(chat_id='-1001629085914',
+                                           text=clear_message,
+                                           parse_mode=ParseMode.HTML)
+                    await bot.session.close()
+
+                case _:
+                    logging.warning("Не верный флаг проверки")
+        await Graduate.init_user.set()
+        await state.update_data(mc=len(data)+2)
+        await message.answer("Все проверенные сообщения ушли в канал", reply_markup=MAIN_MENU)
+    else:
+        await message.answer("Отправка в чат остановлена", reply_markup=MAIN_MENU)
+        await Graduate.init_user.set()
 
 
 def register_sender(dp: Dispatcher):

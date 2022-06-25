@@ -1,3 +1,4 @@
+import logging
 import os
 import sqlite3
 from sqlite3 import IntegrityError
@@ -48,7 +49,7 @@ class Database:
         try:
             cursor.execute(query, val)
         except IntegrityError:
-            print("Уже есть запись")
+            logging.warning("Повторный запуск команды /start")
             return False
         self._conn.commit()
         cursor.close()

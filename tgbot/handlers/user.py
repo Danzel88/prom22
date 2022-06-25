@@ -4,6 +4,7 @@ from random import choice
 
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
+from aiogram.types import ContentType
 from aiogram.types import Message, InputFile, ReplyKeyboardRemove, ParseMode
 
 from tgbot.config import load_config
@@ -22,9 +23,9 @@ conf = load_config('.env')
 async def user_start(message: Message, state: FSMContext):
     if await db.insert_user({'tg_id': message.from_user.id, 'username': message.from_user.username}):
         await message.answer(dialogs.Messages.grete_msg, reply_markup=MAIN_MENU)
-        await states.Graduate.init_user.set()
         await states.data_setter(state, message)
         return
+    await states.Graduate.init_user.set()
     await message.answer(dialogs.Messages.retry_start, reply_markup=MAIN_MENU)
 
 
@@ -39,22 +40,29 @@ async def get_event_timing(message: Message):
 
 async def get_programs(message: Message):
     match message.text:
-        case Events.young_people:
-            await message.answer_photo(InputFile("data/event_timing/young_people.jpg"),
-                                       caption=dialogs.NoPicProgram.young_people)
+        case Events.main_scene:
+            await message.answer_photo(InputFile('data/event_timing/main_scene.jpg'))
+        case Events.electroscene:
+            await message.answer_photo(InputFile('data/event_timing/electroscene.jpg'))
+        case Events.water_show:
+            await message.answer_photo(InputFile('data/event_timing/water_show.jpg'))
+        case Events.disco_scene:
+            await message.answer_photo(InputFile('data/event_timing/disco_scene.jpg'))
         case Events.quiet_disco:
-            await message.answer_photo(InputFile("data/event_timing/silent_disco.jpg"),
-                                       caption=dialogs.NoPicProgram.quiet_disco)
+            await message.answer(dialogs.NoPicProgram.quiet_disco)
         case Events.game_zone:
-            await message.answer_photo(InputFile("data/event_timing/game_zone.jpg"),
-                                       caption=dialogs.NoPicProgram.game_zone)
+            await message.answer(dialogs.NoPicProgram.game_zone)
         case Events.quiz_please:
-            await message.answer_photo(InputFile("data/event_timing/quiz_plizz.jpg"),
-                                       caption=dialogs.NoPicProgram.quiz_please)
+            await message.answer(dialogs.NoPicProgram.quiz_please)
+        case Events.comic_show:
+            await message.answer_photo(InputFile("data/event_timing/comic_1.jpg"))
+            await message.answer_photo(InputFile("data/event_timing/comic_2.jpg"))
+            await message.answer_photo(InputFile("data/event_timing/comic_3.jpg"))
         case Events.extreme:
-            await message.answer_photo(InputFile("data/event_timing/extreme.jpg"),
-                                       caption=dialogs.NoPicProgram.tmp,
-                                       parse_mode=ParseMode.HTML)
+            await message.answer(dialogs.NoPicProgram.extreme,
+                                 parse_mode=ParseMode.HTML)
+        case Events.young_people:
+            await message.answer(dialogs.NoPicProgram.young_people)
 
 
 async def get_map(message: Message):
@@ -158,6 +166,7 @@ async def get_school_for_main_chat(message: Message, state: FSMContext):
             await state.update_data(school=message.text)
             await message.answer(dialogs.Messages.text_for_main_chat)
             await states.Chat.next()
+
             return
         await message.answer(dialogs.Messages.its_commands)
     except ValueError:
@@ -165,6 +174,7 @@ async def get_school_for_main_chat(message: Message, state: FSMContext):
 
 
 async def get_text_for_main_chat(message: Message, state: FSMContext):
+    print(message)
     if await censor(message.text.lower()):
         if message.text not in conf.commands.cmd:
             await state.update_data(text=message.text)
@@ -174,6 +184,7 @@ async def get_text_for_main_chat(message: Message, state: FSMContext):
             str_state = await state.get_state()
             await db.insert_msg_to_all(raw_data)
             clear_data = await cleaner(raw_data, str_state)
+            clear_data.append('FALSE')
             chat_msg_writer = GoogleWriter(conf.google.chat_sheet_id, conf.google.cred_file)
             chat_msg_writer.data_writer([clear_data], len(clear_data)+1)
             await states.Graduate.init_user.set()
@@ -227,7 +238,7 @@ def register_user(dp: Dispatcher):
     dp.register_message_handler(get_event_timing, text=MAIN_MENU.values["keyboard"][0][0]['text'], state="*")
 
     dp.register_message_handler(get_map, commands=["map"], state=states.Graduate.init_user)
-    dp.register_message_handler(get_map, text=MAIN_MENU.values["keyboard"][0][1]['text'], state="*")
+    dp.register_message_handler(get_map, text=MAIN_MENU.values["keyboard"][0][1]['text'], state=states.Graduate.init_user)
     dp.register_message_handler(get_programs, text=list(Events.__dict__.values())[2:12], state="*")
 
     dp.register_message_handler(start_review, commands=["review"], state=states.Graduate.init_user)
@@ -243,7 +254,8 @@ def register_user(dp: Dispatcher):
     dp.register_message_handler(get_name_for_main_chat, state=states.Chat.wait_name)
     # dp.register_message_handler(get_grade_for_main_chat, state=states.Chat.wait_grade)
     dp.register_message_handler(get_school_for_main_chat, state=states.Chat.wait_school)
-    dp.register_message_handler(get_text_for_main_chat, state=states.Chat.wait_text)
+    dp.register_message_handler(get_text_for_main_chat, state=states.Chat.wait_text,
+                                content_types=ContentType.ANY)
 
     dp.register_message_handler(get_photo_link, commands=['photo_gallery'],
                                 state=states.Graduate.init_user)

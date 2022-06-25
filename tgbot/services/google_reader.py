@@ -53,11 +53,10 @@ class GoogleSheetReader:
         except HttpError as err:
             print(err)
 
-
-    def get_data_from_gsheet(self):
-        range_ = "A2:E"
+    def get_data_from_gsheet(self, start: int = 2):
+        range_ = f"A{start}:E"
         request = self._service.spreadsheets().values().get(spreadsheetId=con.google.chat_sheet_id, range=range_)
-        return request.execute()["values"]
+        return request.execute()['values']
 
 
 # test = GoogleSheetReader(con.google.review_sheet_id, con.google.cred_file)

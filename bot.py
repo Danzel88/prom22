@@ -44,6 +44,8 @@ async def set_all_command(bot: Bot):
 
 async def main():
     logging.basicConfig(
+        filename=f'tgbot/log/log-from-bot{datetime.datetime.now().date()}.log',
+        filemode='w',
         level=logging.INFO,
         format=u'%(filename)s:%(lineno)d #%(levelname)-8s [%(asctime)s] - %(name)s - %(message)s',
     )
