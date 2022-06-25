@@ -31,7 +31,11 @@ class PostToChannel(StatesGroup):
 
 
 async def data_setter(state: FSMContext, message):
-    await state.update_data(tg_id=message.from_user.id,
-                            username=message.from_user.username)
+    if message.from_user.username:
+        await state.update_data(tg_id=message.from_user.id,
+                                username=message.from_user.username)
+    else:
+        await state.update_data(tg_id=message.from_user.id,
+                                username='noname')
     user_state = await state.get_data()
     return user_state
