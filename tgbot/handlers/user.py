@@ -56,7 +56,8 @@ async def get_programs(message: Message):
             await message.answer_photo(InputFile("data/event_timing/game_zone.png"),
                                        caption=dialogs.NoPicProgram.game_zone)
         case Events.quiz_please:
-            await message.answer(dialogs.NoPicProgram.quiz_please)
+            await message.answer_photo(InputFile("data/event_timing/quiz_plizz.jpg"),
+                                       caption=dialogs.NoPicProgram.quiz_please)
         case Events.comic_show:
             await message.answer_photo(InputFile("data/event_timing/comic_1.jpg"))
             await message.answer_photo(InputFile("data/event_timing/comic_2.jpg"))
