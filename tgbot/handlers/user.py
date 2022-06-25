@@ -248,9 +248,9 @@ def register_user(dp: Dispatcher):
     dp.register_message_handler(get_pers_info, state=states.Review.wait_pers_info)
     dp.register_message_handler(review_done, state=states.Review.wait_review)
 
-    dp.register_message_handler(start_msg_to_all, commands=["msg_to_all"], state=states.Graduate.init_user)
+    dp.register_message_handler(start_msg_to_all, commands=["msg_to_all"], state=states.Graduate.init_user, is_admin=False)
     dp.register_message_handler(start_msg_to_all, text=MAIN_MENU.values["keyboard"][1][1]['text'],
-                                state=states.Graduate.init_user)
+                                state=states.Graduate.init_user, is_admin=False)
     dp.register_message_handler(get_name_for_main_chat, state=states.Chat.wait_name)
     # dp.register_message_handler(get_grade_for_main_chat, state=states.Chat.wait_grade)
     dp.register_message_handler(get_school_for_main_chat, state=states.Chat.wait_school)

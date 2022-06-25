@@ -23,7 +23,7 @@ async def cleaner(data: dict, context: str) -> list:
 async def format_msg_to_chat(msg: list):
     del(msg[0], msg[-1])
     res = f'<b>{msg[0]}</b>, <b>школа {msg[1]}</b>\n\n{msg[-1]}'
-    await sleep(3)
+    await sleep(1)
     return res
 
 

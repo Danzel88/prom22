@@ -16,7 +16,6 @@ from tgbot.config import load_config
 from tgbot.middlewares.db import database as db
 from tgbot.services.google_reader import GoogleSheetReader
 
-
 config = load_config('.env')
 
 bot = Bot(token=config.tg_bot.token, parse_mode='HTML')
@@ -45,10 +44,12 @@ def register_admin(dp: Dispatcher):
 async def init_sender_state(message: types.Message, state: FSMContext):
     """инициализация рассылки"""
     if "test" in message.text:
-        await message.answer(f'{SenderMessages.message_for_test_sender}', parse_mode="HTML", reply_markup=types.ReplyKeyboardRemove())
+        await message.answer(f'{SenderMessages.message_for_test_sender}', parse_mode="HTML",
+                             reply_markup=types.ReplyKeyboardRemove())
         await Sender.waiting_message_from_admin_to_test_mailing.set()
         return
-    await message.answer(f'{SenderMessages.message_for_sender}', parse_mode="HTML", reply_markup=types.ReplyKeyboardRemove())
+    await message.answer(f'{SenderMessages.message_for_sender}', parse_mode="HTML",
+                         reply_markup=types.ReplyKeyboardRemove())
     await state.finish()
     await Sender.waiting_message_from_admin.set()
 
@@ -101,7 +102,6 @@ async def test_sender(message: types.Message, state: FSMContext):
             json.dump(sent_message, f)
         await message.answer(f'Номер рассылки для удаления {int(message.message_id) + 1}')
         await states.Graduate.init_user.set()
-
 
 
 async def start_spam(message: types.Message, state: FSMContext):
@@ -163,40 +163,48 @@ async def posts_init(message: Message):
     await PostToChannel.wait_confirm_posting.set()
 
 
-async def post_to_channel(message: Message, state: FSMContext):
+async def get_message_from_gsheet(message: Message, state: FSMContext):
     if message.text == "Yes":
-        raw_data = GoogleSheetReader(config.google.chat_sheet_id, config.google.cred_file)
+        msg_counter = 2
+        reader = GoogleSheetReader(config.google.chat_sheet_id, config.google.cred_file)
+        await message.answer("Собираю сообщения, это займет время")
         try:
-            start_row = await state.get_data()
+            sr = await state.get_data()
+            start_row = sr['mc']
             print(start_row)
-            mc = start_row['mc']
-            data = raw_data.get_data_from_gsheet(start=int(mc))
-        except KeyError:
-            data = raw_data.get_data_from_gsheet()
-        await message.answer("Начал отпрвку сообщений, это займет время")
-        await PostToChannel.first()
-        for i in data:
-            match i[-1]:
-                case "Ok":
-                    clear_message = await format_msg_to_chat(i)
-                    await bot.get_session()
-                    await bot.send_message(chat_id='-1001629085914',
-                                           text=clear_message,
-                                           parse_mode=ParseMode.HTML)
-                    await bot.session.close()
+            data = reader.get_data_from_gsheet(start_row)
+            for msg in data:
+                if "FALSE" not in msg:
+                    if "Ok" in msg:
+                        clear_message = await format_msg_to_chat(msg)
+                        await bot.get_session()
+                        await bot.send_message(chat_id='-1001629085914',
+                                               text=clear_message,
+                                               parse_mode=ParseMode.HTML)
+                        start_row += 1
+            await state.update_data(mc=start_row)
 
-                case _:
-                    logging.warning("Не верный флаг проверки")
-        await Graduate.init_user.set()
-        await state.update_data(mc=len(data)+2)
-        await message.answer("Все проверенные сообщения ушли в канал", reply_markup=MAIN_MENU)
-    else:
-        await message.answer("Отправка в чат остановлена", reply_markup=MAIN_MENU)
-        await Graduate.init_user.set()
+            await message.answer("Все проверенные сообщения отправлены",reply_markup=MAIN_MENU)
+        except KeyError:
+            print("no kye")
+            await message.answer("Собираю сообщения, это займет время")
+            data = reader.get_data_from_gsheet()
+            for msg in data:
+                if "FALSE" not in msg:
+                    if "Ok" in msg:
+                        clear_message = await format_msg_to_chat(msg)
+                        await bot.get_session()
+                        await bot.send_message(chat_id='-1001629085914',
+                                               text=clear_message,
+                                               parse_mode=ParseMode.HTML)
+                    msg_counter += 1
+                    await state.update_data(mc=msg_counter)
+            await bot.session.close()
+            await message.answer("Все проверенные сообщения отправлены",reply_markup=MAIN_MENU)
 
 
 def register_sender(dp: Dispatcher):
-    dp.register_message_handler(init_sender_state,  commands=["sender", "test"], state="*", is_admin=True)
+    dp.register_message_handler(init_sender_state, commands=["sender", "test"], state="*", is_admin=True)
     # dp.register_message_handler(init_sender_state, commands="test", state="*", is_admin=True)
     dp.register_message_handler(del_init, commands="delete", state="*", is_admin=True)
     dp.register_message_handler(delete_send_message, state=Sender.waiting_message_id, is_admin=True)
@@ -205,4 +213,4 @@ def register_sender(dp: Dispatcher):
     dp.register_message_handler(test_sender, state=Sender.waiting_message_from_admin_to_test_mailing,
                                 content_types=['text', 'photo'], is_admin=True)
     dp.register_message_handler(posts_init, commands='post', state="*", is_admin=True)
-    dp.register_message_handler(post_to_channel, state=PostToChannel.wait_confirm_posting, is_admin=True)
+    dp.register_message_handler(get_message_from_gsheet, state=PostToChannel.wait_confirm_posting, is_admin=True)
