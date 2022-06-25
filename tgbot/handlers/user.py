@@ -149,11 +149,17 @@ async def review_done(message: Message, state: FSMContext):
 
 
 async def start_msg_to_all(message: Message, state: FSMContext):
-    await message.answer(dialogs.Messages.msg_to_all)
-    await sleep(0.5)
-    await message.answer(dialogs.Messages.name_for_main_chat,
-                         reply_markup=ReplyKeyboardRemove())
-    await states.Chat.wait_name.set()
+    repeat_msg = await state.get_data()
+    if not repeat_msg.get('text'):
+        await message.answer(dialogs.Messages.msg_to_all)
+        await sleep(0.5)
+        await message.answer(dialogs.Messages.name_for_main_chat,
+                             reply_markup=ReplyKeyboardRemove())
+        await states.Chat.wait_name.set()
+        return
+    else:
+        await message.answer("Твое сообщение уже получено")
+
 
 
 async def get_name_for_main_chat(message: Message, state: FSMContext):
