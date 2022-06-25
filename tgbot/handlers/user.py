@@ -199,7 +199,7 @@ async def get_text_for_main_chat(message: Message, state: FSMContext):
 
 
 async def get_photo_link(message: Message):
-    await message.answer(dialogs.Messages.tmp_photo_link)
+    await message.answer(dialogs.Messages.photo_link)
 
 
 async def sticker_pack(message: Message):
