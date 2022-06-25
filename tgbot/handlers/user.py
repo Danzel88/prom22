@@ -175,7 +175,6 @@ async def get_school_for_main_chat(message: Message, state: FSMContext):
 
 
 async def get_text_for_main_chat(message: Message, state: FSMContext):
-    print(message)
     if await censor(message.text.lower()):
         if message.text not in conf.commands.cmd:
             await state.update_data(text=message.text)
