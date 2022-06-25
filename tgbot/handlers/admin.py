@@ -171,14 +171,13 @@ async def get_message_from_gsheet(message: Message, state: FSMContext):
         try:
             sr = await state.get_data()
             start_row = sr['mc']
-            print(start_row)
             data = reader.get_data_from_gsheet(start_row)
             for msg in data:
                 if "FALSE" not in msg:
                     if "Ok" in msg:
                         clear_message = await format_msg_to_chat(msg)
                         await bot.get_session()
-                        await bot.send_message(chat_id='-1001629085914',
+                        await bot.send_message(chat_id=config.tg_bot.chanel_id,
                                                text=clear_message,
                                                parse_mode=ParseMode.HTML)
                         start_row += 1
@@ -186,7 +185,6 @@ async def get_message_from_gsheet(message: Message, state: FSMContext):
 
             await message.answer("Все проверенные сообщения отправлены",reply_markup=MAIN_MENU)
         except KeyError:
-            print("no kye")
             await message.answer("Собираю сообщения, это займет время")
             data = reader.get_data_from_gsheet()
             for msg in data:
@@ -194,7 +192,7 @@ async def get_message_from_gsheet(message: Message, state: FSMContext):
                     if "Ok" in msg:
                         clear_message = await format_msg_to_chat(msg)
                         await bot.get_session()
-                        await bot.send_message(chat_id='-1001629085914',
+                        await bot.send_message(chat_id=config.tg_bot.chanel_id,
                                                text=clear_message,
                                                parse_mode=ParseMode.HTML)
                     msg_counter += 1
