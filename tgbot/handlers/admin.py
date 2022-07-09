@@ -1,5 +1,5 @@
 from aiogram import types, Bot
-from aiogram.types import Message, ParseMode, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from aiogram.types import Message, ParseMode, ReplyKeyboardMarkup
 import asyncio
 import json
 import logging
@@ -158,12 +158,18 @@ async def delete_send_message(message: types.Message, state: FSMContext):
 
 
 async def posts_init(message: Message):
+    """Инициализация отправки сообщений в канал"""
     kb = ReplyKeyboardMarkup(resize_keyboard=True).row('Yes').row('No')
     await message.answer("Могу собрать сообщения и отправить в канал? Вы все их проверили?", reply_markup=kb)
     await PostToChannel.wait_confirm_posting.set()
 
 
 async def get_message_from_gsheet(message: Message, state: FSMContext):
+    """
+    Забираем все сообщения из google sheet и отправляем в канал те сообщения которые отмечены как Ок
+    :exception Ловим только при первой рассылке, т.к. в data в redis нет ключа mc, в котором хранится номер строки
+    последнего првоеренного модераторами сообщения
+    """
     if message.text == "Yes":
         msg_counter = 2
         reader = GoogleSheetReader(config.google.chat_sheet_id, config.google.cred_file)
@@ -180,10 +186,9 @@ async def get_message_from_gsheet(message: Message, state: FSMContext):
                         await bot.send_message(chat_id=config.tg_bot.chanel_id,
                                                text=clear_message,
                                                parse_mode=ParseMode.HTML)
-                        start_row += 1
+                    start_row += 1
             await state.update_data(mc=start_row)
-
-            await message.answer("Все проверенные сообщения отправлены",reply_markup=MAIN_MENU)
+            await message.answer("Все проверенные сообщения отправлены", reply_markup=MAIN_MENU)
         except KeyError:
             await message.answer("Собираю сообщения, это займет время")
             data = reader.get_data_from_gsheet()
@@ -196,14 +201,16 @@ async def get_message_from_gsheet(message: Message, state: FSMContext):
                                                text=clear_message,
                                                parse_mode=ParseMode.HTML)
                     msg_counter += 1
-                    await state.update_data(mc=msg_counter)
+            await state.update_data(mc=msg_counter)
             await bot.session.close()
             await message.answer("Все проверенные сообщения отправлены",reply_markup=MAIN_MENU)
+    else:
+        await message.answer("Posting on channel canceled", reply_markup=MAIN_MENU)
+    await states.Graduate.init_user.set()
 
 
 def register_sender(dp: Dispatcher):
     dp.register_message_handler(init_sender_state, commands=["sender", "test"], state="*", is_admin=True)
-    # dp.register_message_handler(init_sender_state, commands="test", state="*", is_admin=True)
     dp.register_message_handler(del_init, commands="delete", state="*", is_admin=True)
     dp.register_message_handler(delete_send_message, state=Sender.waiting_message_id, is_admin=True)
     dp.register_message_handler(start_spam, state=Sender.waiting_message_from_admin,

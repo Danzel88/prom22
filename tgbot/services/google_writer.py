@@ -4,7 +4,6 @@ from googleapiclient import discovery
 import httplib2
 from oauth2client.service_account import ServiceAccountCredentials
 
-# debug data
 from tgbot.config import load_config
 
 config = load_config('.env')
@@ -46,7 +45,6 @@ class GoogleWriter:
                      "majorDimension": "ROWS",
                      "values": headers}]}).execute()
 
-
     def _service_builder(self):
         credential = ServiceAccountCredentials. \
             from_json_keyfile_name(self.__cred_file,
@@ -55,20 +53,6 @@ class GoogleWriter:
                                    )
         http_auth = credential.authorize(httplib2.Http())
         return discovery.build("sheets", "v4", http=http_auth, cache_discovery=False)
-
-    # def insert_checkbox(self, coll_letter):
-    #     self._service.spreadsheets().values().batchUpdate(
-    #         spreadsheetId=self._spreadsheet_id,
-    #         body={
-    #             [{'repeatCell':
-    #                  {'cell': {'dataValidation': {'condition': {'type': 'BOOLEAN'}}},
-    #                   'range': {'sheetId': 0, 'startRowIndex': 1, 'endRowIndex': 1,
-    #                             'startColumnIndex': 4,
-    #                             'endColumnIndex': 5},
-    #                   'fields': 'dataValidation'
-    #                   }
-    #              }]
-    #         }).execute()
 
     def data_writer(self, data: list, coll_quantity: int):
         coll_letter = string.ascii_uppercase[:coll_quantity]
@@ -80,6 +64,3 @@ class GoogleWriter:
             valueInputOption="USER_ENTERED",
             body={"majorDimension": "ROWS",
                   "values": data}).execute()
-
-# test = GoogleWriter(config.google.review_sheet_id, config.google.cred_file)
-# test.data_writer(val, len(val[0]))

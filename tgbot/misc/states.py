@@ -14,7 +14,6 @@ class Review(StatesGroup):
 
 class Chat(StatesGroup):
     wait_name = State()
-    # wait_grade = State()
     wait_school = State()
     wait_text = State()
 

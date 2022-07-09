@@ -27,10 +27,6 @@ async def set_admin_command(bot: Bot):
                   BotCommand('test', 'Запуск тестовой рассылки'),
                   BotCommand('delete', 'Удаление рассылки'),
                   BotCommand('post', 'Запустить отправку сообщений в канал')
-        ],
+                  ],
         scope=BotCommandScopeAllChatAdministrators()
-        )
-
-
-
-
+    )

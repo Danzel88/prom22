@@ -1,4 +1,3 @@
-import json
 from asyncio import sleep
 from random import choice
 
@@ -65,7 +64,7 @@ async def get_programs(message: Message):
         case Events.extreme:
             await message.answer_photo(InputFile("data/event_timing/extreme.png"),
                                        caption=dialogs.NoPicProgram.extreme,
-                                 parse_mode=ParseMode.HTML)
+                                       parse_mode=ParseMode.HTML)
         case Events.young_people:
             await message.answer_photo(InputFile("data/event_timing/young_people.png"),
                                        caption=dialogs.NoPicProgram.young_people)
@@ -94,13 +93,10 @@ async def get_role(message: Message, state: FSMContext):
     if message.text not in conf.commands.cmd:
         match message.text:
             case ROLE.grad:
-                # await state.update_data(role=message.text)
                 await message.answer(dialogs.Messages.pers_info_for_grad, reply_markup=ReplyKeyboardRemove())
             case ROLE.teacher:
-                # await state.update_data(role=message.text)
                 await message.answer(dialogs.Messages.pers_info_for_teacher, reply_markup=ReplyKeyboardRemove())
             case ROLE.parents:
-                # await state.update_data(role=message.text)
                 await message.answer(dialogs.Messages.pers_info_for_parents, reply_markup=ReplyKeyboardRemove())
             case _:
                 await message.answer(dialogs.Messages.not_in_answers_list)
@@ -161,7 +157,6 @@ async def start_msg_to_all(message: Message, state: FSMContext):
         await message.answer(dialogs.Messages.msg_limit)
 
 
-
 async def get_name_for_main_chat(message: Message, state: FSMContext):
     if message.text not in conf.commands.cmd:
         await state.update_data(name=message.text)
@@ -196,7 +191,7 @@ async def get_text_for_main_chat(message: Message, state: FSMContext):
             clear_data = await cleaner(raw_data, str_state)
             clear_data.append('FALSE')
             chat_msg_writer = GoogleWriter(conf.google.chat_sheet_id, conf.google.cred_file)
-            chat_msg_writer.data_writer([clear_data], len(clear_data)+1)
+            chat_msg_writer.data_writer([clear_data], len(clear_data) + 1)
             await states.Graduate.init_user.set()
             return
         await message.answer(dialogs.Messages.its_commands)
@@ -248,7 +243,8 @@ def register_user(dp: Dispatcher):
     dp.register_message_handler(get_event_timing, text=MAIN_MENU.values["keyboard"][0][0]['text'], state="*")
 
     dp.register_message_handler(get_map, commands=["map"], state=states.Graduate.init_user)
-    dp.register_message_handler(get_map, text=MAIN_MENU.values["keyboard"][0][1]['text'], state=states.Graduate.init_user)
+    dp.register_message_handler(get_map, text=MAIN_MENU.values["keyboard"][0][1]['text'],
+                                state=states.Graduate.init_user)
     dp.register_message_handler(get_programs, text=list(Events.__dict__.values())[2:12], state="*")
 
     dp.register_message_handler(start_review, commands=["review"], state=states.Graduate.init_user)
@@ -258,7 +254,8 @@ def register_user(dp: Dispatcher):
     dp.register_message_handler(get_pers_info, state=states.Review.wait_pers_info)
     dp.register_message_handler(review_done, state=states.Review.wait_review)
 
-    dp.register_message_handler(start_msg_to_all, commands=["msg_to_all"], state=states.Graduate.init_user, is_admin=False)
+    dp.register_message_handler(start_msg_to_all, commands=["msg_to_all"], state=states.Graduate.init_user,
+                                is_admin=False)
     dp.register_message_handler(start_msg_to_all, text=MAIN_MENU.values["keyboard"][1][1]['text'],
                                 state=states.Graduate.init_user, is_admin=False)
     dp.register_message_handler(get_name_for_main_chat, state=states.Chat.wait_name, content_types=ContentType.ANY)
@@ -274,7 +271,6 @@ def register_user(dp: Dispatcher):
     dp.register_message_handler(sticker_pack, commands=['stickerpack'], state=states.Graduate.init_user)
     dp.register_message_handler(sticker_pack, text=MAIN_MENU.values["keyboard"][2][1]['text'],
                                 state=states.Graduate.init_user)
-    # dp.register_message_handler(sticker_catch, state="*")
 
     dp.register_message_handler(online_chat, commands="chat_on", state=states.Graduate.init_user)
     dp.register_message_handler(online_chat, text="Онлайн-чат", state=states.Graduate.init_user)

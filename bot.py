@@ -2,7 +2,6 @@ import asyncio
 import datetime
 import logging
 
-import aiogram
 from aiogram import Bot, Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.contrib.fsm_storage.redis import RedisStorage2
