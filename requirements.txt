@@ -1,5 +1,5 @@
 aiogram==2.20
-aiohttp==3.8.1
+aiohttp
 aioredis==2.0.1
 aiosignal==1.2.0
 async-timeout==4.0.2
@@ -9,7 +9,7 @@ cachetools==5.2.0
 certifi==2022.5.18.1
 charset-normalizer==2.0.12
 environs==9.5.0
-frozenlist==1.3.0
+frozenlist
 google-api-core==2.8.2
 google-api-python-client==2.51.0
 google-auth==2.8.0
@@ -19,7 +19,7 @@ googleapis-common-protos==1.56.2
 httplib2==0.20.4
 idna==3.3
 marshmallow==3.16.0
-multidict==6.0.2
+multidict
 oauth2client==4.1.3
 oauthlib==3.2.0
 packaging==21.3
@@ -36,4 +36,4 @@ six==1.16.0
 typing_extensions==4.2.0
 uritemplate==4.1.1
 urllib3==1.26.9
-yarl==1.7.2
+yarl==
