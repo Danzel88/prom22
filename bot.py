@@ -10,7 +10,7 @@ from tgbot.config import load_config
 from tgbot.filters.admin import AdminFilter
 from tgbot.filters.command import CommandFilter
 from tgbot.handlers.admin import register_admin, register_sender
-from tgbot.handlers.echo import register_echo
+# from tgbot.handlers.echo import register_echo
 from tgbot.handlers.user import register_user
 from tgbot.services.set_commands import set_default_command, set_admin_command
 from tgbot.middlewares.db import database as db
